@@ -255,9 +255,7 @@ public class MjpegFileWriter implements AutoCloseable {
         }
 
         public byte[] toBytes() throws IOException {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            baos.write(fcc);
-            baos.write(intBytes(swapInt(cb)));
+            ByteArrayOutputStream baos = createByteArrayOutputStreamWriteFCCWriteSwapInt(fcc, cb);
             baos.write(intBytes(swapInt(dwMicroSecPerFrame)));
             baos.write(intBytes(swapInt(dwMaxBytesPerSec)));
             baos.write(intBytes(swapInt(dwPaddingGranularity)));
@@ -337,9 +335,7 @@ public class MjpegFileWriter implements AutoCloseable {
         }
 
         public byte[] toBytes() throws IOException {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            baos.write(fcc);
-            baos.write(intBytes(swapInt(cb)));
+            ByteArrayOutputStream baos = createByteArrayOutputStreamWriteFCCWriteSwapInt(fcc, cb);
             baos.write(fccType);
             baos.write(fccHandler);
             baos.write(intBytes(swapInt(dwFlags)));
@@ -360,6 +356,13 @@ public class MjpegFileWriter implements AutoCloseable {
 
             return baos.toByteArray();
         }
+    }
+
+    public ByteArrayOutputStream createByteArrayOutputStreamWriteFCCWriteSwapInt(byte[] fcc, int intToSwap) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        baos.write(fcc);
+        baos.write(intBytes(swapInt(intToSwap)));
+        return baos;
     }
 
     private class AVIStreamFormat {
