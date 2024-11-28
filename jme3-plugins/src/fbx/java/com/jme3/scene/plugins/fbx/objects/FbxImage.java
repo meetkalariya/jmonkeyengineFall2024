@@ -111,7 +111,9 @@ public class FbxImage extends FbxObject {
                 Texture tex = null;
                 try {
                     tex = assetManager.loadTexture(new ContentTextureKey(scene.currentAssetInfo.getKey().getFolder() + filename, content));
-                } catch(Exception e) {}
+                } catch(Exception e) {
+                     throw new RuntimeException("Failed to load texture: " + filename, e);
+                }
                 if(tex != null)
                     image = tex.getImage();
             }
