@@ -171,33 +171,89 @@ public class VideoRecorderAppState extends AbstractAppState {
     @Override
     public void initialize(AppStateManager stateManager, Application app) {
         super.initialize(stateManager, app);
-        this.app = app;
-        this.oldTimer = app.getTimer();
-        app.setTimer(new IsoTimer(framerate));
+
+        // Validate the input application instance
+        if (app == null) {
+            throw new IllegalArgumentException("Application instance cannot be null");
+        }
+
+        // Defensive copying: store only what is needed
+        this.oldTimer = app.getTimer(); // Keep the old timer
+        app.setTimer(new IsoTimer(framerate)); // Set the custom timer for this state
+
+        RenderManager renderManager = app.getRenderManager();
+        if (renderManager == null) {
+            throw new IllegalStateException("RenderManager is not initialized in the Application");
+        }
+
+        // Determine the file to write video to if none is specified
         if (file == null) {
             String filename = System.getProperty("user.home") + File.separator + "jMonkey-" + System.currentTimeMillis() / 1000 + ".avi";
             file = new File(filename);
         }
-        processor = new VideoProcessor();
-        List<ViewPort> vps = app.getRenderManager().getPostViews();
 
-        for (int i = vps.size() - 1; i >= 0; i-- ) {
-            lastViewPort = vps.get(i);
+        processor = new VideoProcessor();
+        List<ViewPort> viewPorts = renderManager.getPostViews();
+
+        // Safely select the last enabled ViewPort
+        for (int i = viewPorts.size() - 1; i >= 0; i--) {
+            lastViewPort = viewPorts.get(i);
             if (lastViewPort.isEnabled()) {
                 break;
             }
         }
-        lastViewPort.addProcessor(processor);
+
+        // Attach the processor to the selected ViewPort
+        if (lastViewPort != null) {
+            lastViewPort.addProcessor(processor);
+        } else {
+            throw new IllegalStateException("No enabled ViewPort found to attach the VideoProcessor");
+        }
     }
+//    public void initialize(AppStateManager stateManager, Application app) {
+//        super.initialize(stateManager, app);
+//        this.app = app;
+//        this.oldTimer = app.getTimer();
+//        app.setTimer(new IsoTimer(framerate));
+//        if (file == null) {
+//            String filename = System.getProperty("user.home") + File.separator + "jMonkey-" + System.currentTimeMillis() / 1000 + ".avi";
+//            file = new File(filename);
+//        }
+//        processor = new VideoProcessor();
+//        List<ViewPort> vps = app.getRenderManager().getPostViews();
+//
+//        for (int i = vps.size() - 1; i >= 0; i-- ) {
+//            lastViewPort = vps.get(i);
+//            if (lastViewPort.isEnabled()) {
+//                break;
+//            }
+//        }
+//        lastViewPort.addProcessor(processor);
+//    }
 
     @Override
     public void cleanup() {
-        lastViewPort.removeProcessor(processor);
-        app.setTimer(oldTimer);
+        if (lastViewPort != null) {
+            lastViewPort.removeProcessor(processor);
+        }
+
+        // Restore the old timer
+        if (app != null) {
+            app.setTimer(oldTimer);
+        }
+
         initialized = false;
         file = null;
+
         super.cleanup();
     }
+//    public void cleanup() {
+//        lastViewPort.removeProcessor(processor);
+//        app.setTimer(oldTimer);
+//        initialized = false;
+//        file = null;
+//        super.cleanup();
+//    }
 
     private class WorkItem {
 

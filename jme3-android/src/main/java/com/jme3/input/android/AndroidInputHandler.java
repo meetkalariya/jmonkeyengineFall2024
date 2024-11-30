@@ -45,22 +45,20 @@ import com.jme3.system.AppSettings;
 import java.util.logging.Logger;
 
 /**
- * <code>AndroidInput</code> is the main class that connects the Android system
- * inputs to jME. It receives the inputs from the Android View and passes them
- * to the appropriate classes based on the source of the input.<br>
+ * <code>AndroidInput</code> is the main class that connects the Android system inputs to jME. It receives the
+ * inputs from the Android View and passes them to the appropriate classes based on the source of the
+ * input.<br>
  * This class is to be extended when new functionality is released in Android.
  *
  * @author iwgeric
  */
-public class AndroidInputHandler implements View.OnTouchListener,
-        View.OnKeyListener {
+public class AndroidInputHandler implements View.OnTouchListener, View.OnKeyListener {
 
     private static final Logger logger = Logger.getLogger(AndroidInputHandler.class.getName());
 
     protected GLSurfaceView view;
     protected AndroidTouchInput touchInput;
     protected AndroidJoyInput joyInput;
-
 
     public AndroidInputHandler() {
         touchInput = new AndroidTouchInput(this);
@@ -76,13 +74,13 @@ public class AndroidInputHandler implements View.OnTouchListener,
             removeListeners(this.view);
         }
 
-        this.view = (GLSurfaceView)view;
+        this.view = (GLSurfaceView) view;
 
         if (this.view != null) {
             addListeners(this.view);
         }
 
-        joyInput.setView((GLSurfaceView)view);
+        joyInput.setView((GLSurfaceView) view);
     }
 
     public View getView() {
@@ -100,10 +98,8 @@ public class AndroidInputHandler implements View.OnTouchListener,
         view.setOnTouchListener(this);
         view.setOnKeyListener(this);
         AndroidGestureProcessor gestureHandler = new AndroidGestureProcessor(touchInput);
-        touchInput.setGestureDetector(new GestureDetector(
-                view.getContext(), gestureHandler));
-        touchInput.setScaleDetector(new ScaleGestureDetector(
-                view.getContext(), gestureHandler));
+        touchInput.setGestureDetector(new GestureDetector(view.getContext(), gestureHandler));
+        touchInput.setScaleDetector(new ScaleGestureDetector(view.getContext(), gestureHandler));
     }
 
     public void loadSettings(AppSettings settings) {
@@ -119,66 +115,44 @@ public class AndroidInputHandler implements View.OnTouchListener,
     }
 
     /*
-     *  Android input events include the source from which the input came from.
-     *  We must look at the source of the input event to determine which type
-     *  of jME input it belongs to.
-     *  If the input is from a gamepad or joystick source, the event is sent
-     *  to the JoyInput class to convert the event into jME joystick events.
-     *  </br>
-     *  If the input is from a touchscreen source, the event is sent to the
-     *  TouchProcessor to convert the event into touch events.
-     *  The TouchProcessor also converts the events into Mouse and Key events
-     *  if AppSettings is set to simulate Mouse or Keyboard events.
+     * Android input events include the source from which the input came from. We must look at the source of
+     * the input event to determine which type of jME input it belongs to. If the input is from a gamepad or
+     * joystick source, the event is sent to the JoyInput class to convert the event into jME joystick events.
+     * </br> If the input is from a touchscreen source, the event is sent to the TouchProcessor to convert the
+     * event into touch events. The TouchProcessor also converts the events into Mouse and Key events if
+     * AppSettings is set to simulate Mouse or Keyboard events.
      *
-     *  Android reports the source as a bitmask as shown below.</br>
+     * Android reports the source as a bitmask as shown below.</br>
      *
-     *  InputDevice Sources
-     *     0000 0000 0000 0000 0000 0000 0000 0000 - 32 bit bitmask
+     * InputDevice Sources 0000 0000 0000 0000 0000 0000 0000 0000 - 32 bit bitmask
      *
-     *     0000 0000 0000 0000 0000 0000 1111 1111 - SOURCE_CLASS_MASK       (0x000000ff)
-     *     0000 0000 0000 0000 0000 0000 0000 0000 - SOURCE_CLASS_NONE       (0x00000000)
-     *     0000 0000 0000 0000 0000 0000 0000 0001 - SOURCE_CLASS_BUTTON     (0x00000001)
-     *     0000 0000 0000 0000 0000 0000 0000 0010 - SOURCE_CLASS_POINTER    (0x00000002)
-     *     0000 0000 0000 0000 0000 0000 0000 0100 - SOURCE_CLASS_TRACKBALL  (0x00000004)
-     *     0000 0000 0000 0000 0000 0000 0000 1000 - SOURCE_CLASS_POSITION   (0x00000008)
-     *     0000 0000 0000 0000 0000 0000 0001 0000 - SOURCE_CLASS_JOYSTICK   (0x00000010)
+     * 0000 0000 0000 0000 0000 0000 1111 1111 - SOURCE_CLASS_MASK (0x000000ff) 0000 0000 0000 0000 0000 0000
+     * 0000 0000 - SOURCE_CLASS_NONE (0x00000000) 0000 0000 0000 0000 0000 0000 0000 0001 -
+     * SOURCE_CLASS_BUTTON (0x00000001) 0000 0000 0000 0000 0000 0000 0000 0010 - SOURCE_CLASS_POINTER
+     * (0x00000002) 0000 0000 0000 0000 0000 0000 0000 0100 - SOURCE_CLASS_TRACKBALL (0x00000004) 0000 0000
+     * 0000 0000 0000 0000 0000 1000 - SOURCE_CLASS_POSITION (0x00000008) 0000 0000 0000 0000 0000 0000 0001
+     * 0000 - SOURCE_CLASS_JOYSTICK (0x00000010)
      *
-     *     1111 1111 1111 1111 1111 1111 0000 0000 - Source_Any              (0xffffff00)
-     *     0000 0000 0000 0000 0000 0000 0000 0000 - SOURCE_UNKNOWN          (0x00000000)
-     *     0000 0000 0000 0000 0000 0001 0000 0001 - SOURCE_KEYBOARD         (0x00000101)
-     *     0000 0000 0000 0000 0000 0010 0000 0001 - SOURCE_DPAD             (0x00000201)
-     *     0000 0000 0000 0000 0000 0100 0000 0001 - SOURCE_GAMEPAD          (0x00000401)
-     *     0000 0000 0000 0000 0001 0000 0000 0010 - SOURCE_TOUCHSCREEN      (0x00001002)
-     *     0000 0000 0000 0000 0010 0000 0000 0010 - SOURCE_MOUSE            (0x00002002)
-     *     0000 0000 0000 0000 0100 0000 0000 0010 - SOURCE_STYLUS           (0x00004002)
-     *     0000 0000 0000 0001 0000 0000 0000 0100 - SOURCE_TRACKBALL        (0x00010004)
-     *     0000 0000 0001 0000 0000 0000 0000 1000 - SOURCE_TOUCHPAD         (0x00100008)
-     *     0000 0000 0010 0000 0000 0000 0000 0000 - SOURCE_TOUCH_NAVIGATION (0x00200000)
-     *     0000 0001 0000 0000 0000 0000 0001 0000 - SOURCE_JOYSTICK         (0x01000010)
-     *     0000 0010 0000 0000 0000 0000 0000 0001 - SOURCE_HDMI             (0x02000001)
+     * 1111 1111 1111 1111 1111 1111 0000 0000 - Source_Any (0xffffff00) 0000 0000 0000 0000 0000 0000 0000
+     * 0000 - SOURCE_UNKNOWN (0x00000000) 0000 0000 0000 0000 0000 0001 0000 0001 - SOURCE_KEYBOARD
+     * (0x00000101) 0000 0000 0000 0000 0000 0010 0000 0001 - SOURCE_DPAD (0x00000201) 0000 0000 0000 0000
+     * 0000 0100 0000 0001 - SOURCE_GAMEPAD (0x00000401) 0000 0000 0000 0000 0001 0000 0000 0010 -
+     * SOURCE_TOUCHSCREEN (0x00001002) 0000 0000 0000 0000 0010 0000 0000 0010 - SOURCE_MOUSE (0x00002002)
+     * 0000 0000 0000 0000 0100 0000 0000 0010 - SOURCE_STYLUS (0x00004002) 0000 0000 0000 0001 0000 0000 0000
+     * 0100 - SOURCE_TRACKBALL (0x00010004) 0000 0000 0001 0000 0000 0000 0000 1000 - SOURCE_TOUCHPAD
+     * (0x00100008) 0000 0000 0010 0000 0000 0000 0000 0000 - SOURCE_TOUCH_NAVIGATION (0x00200000) 0000 0001
+     * 0000 0000 0000 0000 0001 0000 - SOURCE_JOYSTICK (0x01000010) 0000 0010 0000 0000 0000 0000 0000 0001 -
+     * SOURCE_HDMI (0x02000001)
      *
-     * Example values reported by Android for Source
-     * 4,098 = 0x00001002 =
-     *     0000 0000 0000 0000 0001 0000 0000 0010 - SOURCE_CLASS_POINTER
-     *                                               SOURCE_TOUCHSCREEN
-     * 1,281 = 0x00000501 =
-     *     0000 0000 0000 0000 0000 0101 0000 0001 - SOURCE_CLASS_BUTTON
-     *                                               SOURCE_KEYBOARD
-     *                                               SOURCE_GAMEPAD
-     * 16,777,232 = 0x01000010 =
-     *     0000 0001 0000 0000 0000 0000 0001 0000 - SOURCE_CLASS_JOYSTICK
-     *                                               SOURCE_JOYSTICK
+     * Example values reported by Android for Source 4,098 = 0x00001002 = 0000 0000 0000 0000 0001 0000 0000
+     * 0010 - SOURCE_CLASS_POINTER SOURCE_TOUCHSCREEN 1,281 = 0x00000501 = 0000 0000 0000 0000 0000 0101 0000
+     * 0001 - SOURCE_CLASS_BUTTON SOURCE_KEYBOARD SOURCE_GAMEPAD 16,777,232 = 0x01000010 = 0000 0001 0000 0000
+     * 0000 0000 0001 0000 - SOURCE_CLASS_JOYSTICK SOURCE_JOYSTICK
      *
-     * 16,778,513 = 0x01000511 =
-     *     0000 0001 0000 0000 0000 0101 0001 0001 - SOURCE_CLASS_BUTTON
-     *                                               SOURCE_CLASS_JOYSTICK
-     *                                               SOURCE_GAMEPAD
-     *                                               SOURCE_KEYBOARD
-     *                                               SOURCE_JOYSTICK
+     * 16,778,513 = 0x01000511 = 0000 0001 0000 0000 0000 0101 0001 0001 - SOURCE_CLASS_BUTTON
+     * SOURCE_CLASS_JOYSTICK SOURCE_GAMEPAD SOURCE_KEYBOARD SOURCE_JOYSTICK
      *
-     * 257 = 0x00000101 =
-     *     0000 0000 0000 0000 0000 0001 0000 0001 - SOURCE_CLASS_BUTTON
-     *                                               SOURCE_KEYBOARD
+     * 257 = 0x00000101 = 0000 0000 0000 0000 0000 0001 0000 0001 - SOURCE_CLASS_BUTTON SOURCE_KEYBOARD
      *
      *
      *
@@ -205,27 +179,29 @@ public class AndroidInputHandler implements View.OnTouchListener,
     public boolean onTouch(View view, MotionEvent event) {
         return processTouchEvent(view, event);
     }
+
     protected boolean consumeEvent(KeyEvent event, Object touchInput, Object joyInput) {
         int source = event.getSource();
 
-        boolean isTouch = ((source & InputDevice.SOURCE_TOUCHSCREEN) == InputDevice.SOURCE_TOUCHSCREEN) ||
-                ((source & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD);
+        boolean isTouch = ((source & InputDevice.SOURCE_TOUCHSCREEN) == InputDevice.SOURCE_TOUCHSCREEN)
+                || ((source & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD);
 
-        boolean isJoystick = ((source & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) ||
-                ((source & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK);
+        boolean isJoystick = ((source & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD)
+                || ((source & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK);
 
         boolean isUnknown = (source & InputDevice.SOURCE_UNKNOWN) == InputDevice.SOURCE_UNKNOWN;
 
         boolean consumed = false;
 
         // Check if touchInput should consume the event
-        if (touchInput != null && (isTouch || (isUnknown && ((TouchInput)touchInput).isSimulateKeyboard()))) {
+        if (touchInput != null
+                && (isTouch || (isUnknown && ((TouchInput) touchInput).isSimulateKeyboard()))) {
             consumed = true;
         }
 
         // Check if joyInput should consume the event
         if (isJoystick && joyInput != null) {
-            consumed |= ((AndroidJoyInput14)joyInput).onKey(event);
+            consumed |= ((AndroidJoyInput14) joyInput).onKey(event);
         }
 
         return consumed;
